@@ -1,0 +1,4 @@
+python-dotenv
+azure-core
+azure-storage-blob
+pandas
