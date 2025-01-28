@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import folium
 from folium.plugins import HeatMap
-import plotly.graph_objects as go
 from streamlit_folium import st_folium
 
 # Load the datasets
@@ -28,58 +28,75 @@ delays_with_stops = pd.merge(delays, stops, left_on='stop_name', right_on='stop_
 
 col1, col2 = st.columns([3, 1])
 with col1:
-    st.title('Public Transport Delays Analysis in Warsaw')
+    st.title('Analiza Opóźnień Transportu Publicznego w Warszawie')
 with col2:
-    transport_type = st.selectbox("Select Transport Type", ('Autobus', 'Tramwaj', 'Pociąg'))
+    transport_type = st.selectbox("Wybierz Typ Transportu", ('Autobus', 'Tramwaj', 'Pociąg'))
 
 # Filter data based on selected transport type
 filtered_delays = delays[delays['vehicle_type'] == transport_type]
 filtered_delays_with_stops = delays_with_stops[delays_with_stops['vehicle_type'] == transport_type]
 
 # Create tabs
-tab1, tab2, tab3 = st.tabs(["Weather conditions", "Time Trends", "Heatmap of Delays"])
+tab1, tab2, tab3 = st.tabs(["Warunki pogodowe", "Trendy czasowe", "Mapa opóźnień"])
+
+st.markdown("""
+    <style>
+    .metric-container {
+        background-color: rgb(240, 242, 246);
+        border-radius: 5px;
+        padding: 5px;
+        margin-bottom: 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 with tab1:
-    st.header(f'Average Delay vs. Weather Conditions for {transport_type}')
+    st.header(f'Średnie Opóźnienie vs. Warunki Pogodowe (wszystkie typy pojazdów)')
 
     # Merge datasets on date and hour
     merged_data = pd.merge(delays, weather, on=['date', 'hour'])
 
     # Define weather factors
     weather_factors = {
-        'Temperature': 'temperatura',
-        'Wind Speed': 'predkosc_wiatru',
-        'Rain': 'suma_opadu'
+        'Temperatura': 'temperatura',
+        'Prędkość wiatru': 'predkosc_wiatru',
+        'Opady': 'suma_opadu'
     }
 
     # Select weather factor
-    weather_factor = st.selectbox("Select Weather Factor", list(weather_factors.keys()))
+    weather_factor = st.selectbox("Wybierz Czynnik Pogodowy", list(weather_factors.keys()))
     weather_column = weather_factors[weather_factor]
 
     # Regular Conditions Section
-    st.subheader('Regular Conditions')
+    st.subheader('Regularne Warunki')
     avg_weather = merged_data[weather_column].mean()
     avg_delay = merged_data['Delay'].mean()
 
     col1, col2 = st.columns(2)
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
     with col1:
-        st.metric(label=f"Average {weather_factor}", value=f"{avg_weather:.2f}")
-    with col2:
-        st.metric(label="Average Delay (minutes)", value=f"{avg_delay:.2f}")
 
+        st.metric(label=f"Średnia {weather_factor}", value=f"{avg_weather:.2f}")
+
+    with col2:
+        st.metric(label="Średnie Opóźnienie (minuty)", value=f"{avg_delay:.2f}")
+    st.markdown('</div>', unsafe_allow_html=True)
     fig = px.scatter(merged_data, x=weather_column, y='Delay',
-                     labels={weather_column: weather_factor, 'Delay': 'Delay (minutes)'},
-                     title=f'Delay vs. {weather_factor}')
+                     labels={weather_column: weather_factor, 'Delay': 'Opóźnienie (minuty)'},
+                     title=f'Opóźnienie vs. {weather_factor}')
     st.plotly_chart(fig)
 
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # Challenging Conditions Section
-    st.subheader('Challenging Conditions')
+    st.subheader('Trudne Warunki')
 
     # Define challenging weather conditions
     challenging_conditions = {
-        'Rain': merged_data['suma_opadu'] > 7.6,
-        'Wind Speed': merged_data['predkosc_wiatru'] > 8,
-        'Temperature': merged_data['temperatura'] < 0
+        'Opady': merged_data['suma_opadu'] > 7.6,
+        'Prędkość wiatru': merged_data['predkosc_wiatru'] > 8,
+        'Temperatura': merged_data['temperatura'] < 0
     }
 
     condition = challenging_conditions[weather_factor]
@@ -94,14 +111,17 @@ with tab1:
     # Display metrics in rows and columns
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric(label="Average Temperature (°C)", value=f"{filtered_data['temperatura'].mean():.2f}")
-        st.metric(label="Lowest Temperature (°C)", value=f"{filtered_data['temperatura'].min():.2f}")
+        st.metric(label="Średnia Temperatura (°C)", value=f"{filtered_data['temperatura'].mean():.2f}")
+        st.metric(label="Najniższa Temperatura (°C)", value=f"{filtered_data['temperatura'].min():.2f}")
     with col2:
-        st.metric(label="Average Wind Speed (m/s)", value=f"{filtered_data['predkosc_wiatru'].mean():.2f}")
+        st.metric(label="Średnia Prędkość Wiatru (m/s)", value=f"{filtered_data['predkosc_wiatru'].mean():.2f}")
         lowest_temp_date = filtered_data.loc[filtered_data['temperatura'].idxmin(), 'date']
-        st.metric(label="Day with Lowest Temperature", value=lowest_temp_date.strftime('%Y-%m-%d'))
+        st.metric(label="Dzień z Najniższą Temperaturą", value=lowest_temp_date.strftime('%Y-%m-%d'))
     with col3:
-        st.metric(label="Day with Biggest Delay", value=daily_mean_delay.idxmax().strftime('%Y-%m-%d'))
+        st.metric(label="Dzień z Największym Opóźnieniem", value=daily_mean_delay.idxmax().strftime('%Y-%m-%d'))
+
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Calculate mean delay for each vehicle type under normal and challenging conditions
     mean_delay_normal = merged_data[~condition].groupby('vehicle_type')['Delay'].mean().reset_index()
@@ -128,7 +148,7 @@ with tab1:
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=row.influence_ratio,
-                title={'text': f"{row.vehicle_type} Influence Ratio"},
+                title={'text': f"{row.vehicle_type} Wskaźnik Wpływu"},
                 gauge={
                     'axis': {'range': [-1, 2], 'tickwidth': 1, 'tickcolor': "darkblue"},
                     'bar': {'color': get_color(row.influence_ratio)},
@@ -144,18 +164,29 @@ with tab1:
             ))
             st.plotly_chart(fig)
 
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # Create a bar chart for average delays under normal and challenging conditions
     fig = px.bar(influence_ratio, x='vehicle_type', y=['Delay_normal', 'Delay_challenging'],
-                 title=f'Average Delays Under Normal and Challenging Conditions ({weather_factor})',
-                 labels={'value': 'Average Delay (minutes)', 'variable': 'Condition'})
+                 title=f'Średnie Opóźnienia w Normalnych i Trudnych Warunkach ({weather_factor})',
+                 labels={'value': 'Średnie Opóźnienie (minuty)', 'variable': 'Warunek'})
     st.plotly_chart(fig)
+
 with tab2:
-    st.header('Time Trends')
+    st.header(f'Trendy Czasowe dla {transport_type}')
+
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
 
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     with col1:
-        st.subheader('Average Delay Throughout the Day')
+
+        st.subheader('Średnie Opóźnienie w Ciągu Dnia (godziny)')
         mean_delay_by_hour = filtered_delays.groupby('hour')['Delay'].mean().reset_index()
         Q1 = mean_delay_by_hour['Delay'].quantile(0.25)
         Q3 = mean_delay_by_hour['Delay'].quantile(0.75)
@@ -167,15 +198,18 @@ with tab2:
 
         # Display metric
         avg_delay_day = mean_delay_by_hour['Delay'].mean()
-        st.metric(label="Average Delay Throughout the Day (minutes)", value=f"{avg_delay_day:.2f}")
+        st.metric(label="Średnie Opóźnienie w Ciągu Dnia (minuty)", value=f"{avg_delay_day:.2f}")
+
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         fig = px.line(mean_delay_by_hour, x='hour', y='Delay',
-                      title='Average Delays Throughout the Day',
-                      labels={'hour': 'Hour of the Day', 'Delay': 'Average Delay (minutes)'})
+                      title='Średnie Opóźnienia w Ciągu Dnia',
+                      labels={'hour': 'Godzina Dnia', 'Delay': 'Średnie Opóźnienie (minuty)'})
         st.plotly_chart(fig)
 
     with col2:
-        st.subheader('Average Delay Throughout the Week')
+        st.subheader('Średnie Opóźnienie w Ciągu Tygodnia')
         filtered_delays['day_of_week'] = filtered_delays['timestamp'].dt.day_name()
         mean_delay_by_day = filtered_delays.groupby('day_of_week')['Delay'].mean().reset_index()
         Q1 = mean_delay_by_day['Delay'].quantile(0.25)
@@ -192,15 +226,18 @@ with tab2:
 
         # Display metric
         avg_delay_week = mean_delay_by_day['Delay'].mean()
-        st.metric(label="Average Delay Throughout the Week (minutes)", value=f"{avg_delay_week:.2f}")
+        st.metric(label="Średnie Opóźnienie w Ciągu Tygodnia (minuty)", value=f"{avg_delay_week:.2f}")
+
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         fig = px.bar(mean_delay_by_day, x='day_of_week', y='Delay',
-                     title='Average Delays Throughout the Week',
-                     labels={'day_of_week': 'Day of the Week', 'Delay': 'Average Delay (minutes)'})
+                     title='Średnie Opóźnienia w Ciągu Tygodnia',
+                     labels={'day_of_week': 'Dzień Tygodnia', 'Delay': 'Średnie Opóźnienie (minuty)'})
         st.plotly_chart(fig)
 
     with col3:
-        st.subheader('Average Delay Throughout the Month')
+        st.subheader('Średnie Opóźnienie w Ciągu Miesiąca')
         mean_delay_by_day = filtered_delays.groupby('date')['Delay'].mean().reset_index()
         Q1 = mean_delay_by_day['Delay'].quantile(0.25)
         Q3 = mean_delay_by_day['Delay'].quantile(0.75)
@@ -212,15 +249,18 @@ with tab2:
 
         # Display metric
         avg_delay_month = mean_delay_by_day['Delay'].mean()
-        st.metric(label="Average Delay Throughout the Month (minutes)", value=f"{avg_delay_month:.2f}")
+        st.metric(label="Średnie Opóźnienie w Ciągu Miesiąca (minuty)", value=f"{avg_delay_month:.2f}")
+
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         fig = px.line(mean_delay_by_day, x='date', y='Delay',
-                      title='Delay Trends Throughout the Month',
-                      labels={'date': 'Date', 'Delay': 'Average Delay (minutes)'})
+                      title='Trendy Opóźnień w Ciągu Miesiąca',
+                      labels={'date': 'Data', 'Delay': 'Średnie Opóźnienie (minuty)'})
         st.plotly_chart(fig)
 
 with tab3:
-    st.header('Heatmap of Delays for Buses and Trams')
+    st.header('Mapa Opóźnień dla Autobusów i Tramwajów')
 
 
     def create_heatmap(vehicle_type):
@@ -239,11 +279,17 @@ with tab3:
         return warsaw_map, mean_delay_by_stop
 
 
-    st.subheader(f'{transport_type} Delays')
+    st.subheader(f'Opóźnienia {transport_type}')
     transport_map, mean_delay_by_stop = create_heatmap(transport_type)
+
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Display metric
     most_delayed_stop = mean_delay_by_stop.loc[mean_delay_by_stop['Delay'].idxmax()]
-    st.metric(label="Most Delayed Stop", value=most_delayed_stop['stop_name'])
+    st.metric(label="Najbardziej Opóźniony Przystanek", value=most_delayed_stop['stop_name'])
+
+    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st_folium(transport_map, use_container_width=True)
