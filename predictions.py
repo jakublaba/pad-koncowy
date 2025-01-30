@@ -70,8 +70,8 @@ prediction_dates = merged_filtered_df[WeatherColumn.TIMESTAMP.value]
 
 plot_df = pd.DataFrame({
     "Timestamp": prediction_dates,
-    "Actual": y,
-    "Predicted": predictions
+    "Stan faktyczny": y,
+    "Prognoza": predictions
 })
 
 trend_line = model.intercept_ + model.coef_[0] * X[WeatherColumn.TEMPERATURE.value].mean()
@@ -79,12 +79,13 @@ trend_line = model.intercept_ + model.coef_[0] * X[WeatherColumn.TEMPERATURE.val
 fig = px.line(
     plot_df,
     x="Timestamp",
-    y=["Actual", "Predicted"],
-    title=f"Delay Prediction for: {selected_category} {selected_value} (December)",
+    y=["Stan faktyczny", "Prognoza"],
+    title=f"Prognoza opóźnień dla: {selected_category} {selected_value}",
 )
 fig.update_layout(
-    xaxis_title="Time",
+    xaxis_title="Czas",
     yaxis_title=f"{TrafficColumn.DELAY.value}: {selected_metric}",
+    legend_title="Legenda"
 )
 
 fig.add_trace(
