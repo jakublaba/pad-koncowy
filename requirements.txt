@@ -10,3 +10,4 @@ plotly
 holidays
 streamlit_folium
 numpy
+scikit-learn

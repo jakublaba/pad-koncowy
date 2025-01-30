@@ -7,22 +7,32 @@ import pandas as pd
 class Type(Enum):
     STRING = "str"
     DOUBLE = "float64"
+    BOOL = "bool"
 
 
 class TrafficColumn(Enum):
+    BRIGADE_OG = "Brigade"
     BRIGADE = "Brygada"
+    VEHICLE_NO_OG = "Vehicle No"
     VEHICLE_NO = "Numer pojazdu"
+    DELAY_OG = "Delay"
     DELAY = "Opóźnienie"
+    OUTSIDE_OG = "Outside"
     OUTSIDE = "Poza trasą"
     TIMESTAMP = "Timestamp"
     IS_HOLIDAY = "Święto"
 
 
 class WeatherColumn(Enum):
+    TEMPERATURE_OG = "temperatura"
     TEMPERATURE = "Temperatura"
+    WIND_SPEED_OG = "predkosc_wiatru"
     WIND_SPEED = "Prędkość wiatru"
+    HUMIDITY_OG = "wilgotnosc_wzgledna"
     HUMIDITY = "Wilgotność względna"
+    RAINFALL_OG = "suma_opadu"
     RAINFALL = "Suma opadu"
+    PRESSURE_OG = "cisnienie"
     PRESSURE = "Ciśnienie"
     TIMESTAMP = "timestamp"
     IS_HOLIDAY = "Święto"
@@ -38,13 +48,22 @@ class Metric(Enum):
 
 
 def load_traffic_data() -> pd.DataFrame:
-    traffic_df = pd.read_csv("data/traffic/delays-merged.csv")
+    traffic_df = pd.read_csv(
+        "data/traffic/delays-merged.csv",
+        dtype={
+            TrafficColumn.VEHICLE_NO_OG.value: Type.STRING.value,
+            TrafficColumn.BRIGADE_OG.value: Type.STRING.value,
+            TrafficColumn.DELAY_OG.value: Type.DOUBLE.value,
+            TrafficColumn.OUTSIDE_OG.value: Type.BOOL.value,
+        },
+        usecols=lambda col: col in [e.value for e in TrafficColumn if "OG" in e.name] + [TrafficColumn.TIMESTAMP.value]
+    )
     traffic_df.rename(
         columns={
-            "Brigade": TrafficColumn.BRIGADE.value,
-            "Vehicle No": TrafficColumn.VEHICLE_NO.value,
-            "Delay": TrafficColumn.DELAY.value,
-            "Outside": TrafficColumn.OUTSIDE.value,
+            TrafficColumn.VEHICLE_NO_OG.value: TrafficColumn.VEHICLE_NO.value,
+            TrafficColumn.BRIGADE_OG.value: TrafficColumn.BRIGADE.value,
+            TrafficColumn.DELAY_OG.value: TrafficColumn.DELAY.value,
+            TrafficColumn.OUTSIDE_OG.value: TrafficColumn.OUTSIDE.value,
         },
         inplace=True
     )
@@ -55,22 +74,22 @@ def load_weather_data() -> pd.DataFrame:
     weather_df = pd.read_csv(
         "data/weather/weather-merged.csv",
         dtype={
-            "temperatura": Type.DOUBLE.value,
-            "predkosc_wiatru": Type.DOUBLE.value,
-            "wilgotnosc_wzgledna": Type.DOUBLE.value,
-            "suma_opadu": Type.DOUBLE.value,
-            "cisnienie": Type.DOUBLE.value,
-            "timestamp": Type.STRING.value
+            WeatherColumn.TEMPERATURE_OG.value: Type.DOUBLE.value,
+            WeatherColumn.WIND_SPEED_OG.value: Type.DOUBLE.value,
+            WeatherColumn.HUMIDITY_OG.value: Type.DOUBLE.value,
+            WeatherColumn.RAINFALL_OG.value: Type.DOUBLE.value,
+            WeatherColumn.PRESSURE_OG.value: Type.DOUBLE.value,
+            WeatherColumn.TIMESTAMP.value: Type.STRING.value
         },
         usecols=lambda col: col not in ("id_stacji", "stacja", "kierunek_wiatru")
     )
     weather_df.rename(
         columns={
-            "temperatura": WeatherColumn.TEMPERATURE.value,
-            "predkosc_wiatru": WeatherColumn.WIND_SPEED.value,
-            "wilgotnosc_wzgledna": WeatherColumn.HUMIDITY.value,
-            "suma_opadu": WeatherColumn.RAINFALL.value,
-            "cisnienie": WeatherColumn.PRESSURE.value,
+            WeatherColumn.TEMPERATURE_OG.value: WeatherColumn.TEMPERATURE.value,
+            WeatherColumn.WIND_SPEED_OG.value: WeatherColumn.WIND_SPEED.value,
+            WeatherColumn.HUMIDITY_OG.value: WeatherColumn.HUMIDITY.value,
+            WeatherColumn.RAINFALL_OG.value: WeatherColumn.RAINFALL.value,
+            WeatherColumn.PRESSURE_OG.value: WeatherColumn.PRESSURE.value,
         },
         inplace=True
     )
