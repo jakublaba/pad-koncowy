@@ -1,5 +1,6 @@
 from enum import Enum
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -34,8 +35,8 @@ class Metric(Enum):
     MEAN = "Średnia"
     MEDIAN = "Mediana"
     STD_DEV = "Odchylenie standardowe"
-    Q1 = "1 kwantyl"
-    Q3 = "3 kwantyl"
+    Q1 = "25 centyl"
+    Q3 = "75 centyl"
     COUNT = "Ilość"
 
 
@@ -73,8 +74,48 @@ weather_df.rename(
     inplace=True
 )
 
-traffic_df[TrafficColumn.TIMESTAMP.value] = pd.to_datetime(traffic_df[TrafficColumn.TIMESTAMP.value])
+traffic_df[TrafficColumn.TIMESTAMP.value] = pd.to_datetime(traffic_df[TrafficColumn.TIMESTAMP.value]).dt.floor("h")
 weather_df[WeatherColumn.TIMESTAMP.value] = pd.to_datetime(weather_df[WeatherColumn.TIMESTAMP.value])
+merged_df = pd.merge(
+    weather_df, traffic_df,
+    left_on=WeatherColumn.TIMESTAMP.value,
+    right_on=TrafficColumn.TIMESTAMP.value,
+    how="left",
+    validate="1:m"
+)
+delay_stats_df = merged_df.groupby("timestamp")["Opóźnienie"].agg(
+    mean=np.mean,
+    median=np.median,
+    std_dev=np.std,
+    q1=lambda x: np.quantile(x, 0.25),
+    q3=lambda x: np.quantile(x, 0.75),
+    count="count"
+).reset_index()
+delay_stats_df.rename(
+    columns={
+        "mean": Metric.MEAN.value,
+        "median": Metric.MEDIAN.value,
+        "std_dev": Metric.STD_DEV.value,
+        "q1": Metric.Q1.value,
+        "q3": Metric.Q3.value,
+        "count": Metric.COUNT.value
+    },
+    inplace=True
+)
+correlation_df = pd.merge(
+    weather_df, delay_stats_df,
+    on=WeatherColumn.TIMESTAMP.value,
+    how="left",
+    validate="1:m"
+)
+correlation_matrix = correlation_df.corr()
+correlation_fig = px.imshow(
+    correlation_matrix,
+    text_auto=True,
+    aspect="auto",
+    title="Macierz korelacji"
+)
+st.plotly_chart(correlation_fig)
 
 start_date = min(
     traffic_df[TrafficColumn.TIMESTAMP.value].min(),
