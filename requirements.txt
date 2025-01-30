@@ -8,3 +8,5 @@ streamlit
 folium
 plotly
 holidays
+streamlit_folium
+numpy

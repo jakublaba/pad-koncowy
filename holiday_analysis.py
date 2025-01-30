@@ -1,78 +1,13 @@
-from enum import Enum
-
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 from holidays.countries import Poland
 
+from util import TrafficColumn, WeatherColumn, load_traffic_data, load_weather_data, Metric, calculate_delay_stats, \
+    calculate_traffic_metrics
 
-class Types(Enum):
-    STRING = "str"
-    DOUBLE = "float64"
-
-
-class TrafficColumn(Enum):
-    BRIGADE = "Brygada"
-    VEHICLE_NO = "Numer pojazdu"
-    DELAY = "Opóźnienie"
-    OUTSIDE = "Poza trasą"
-    TIMESTAMP = "Timestamp"
-    IS_HOLIDAY = "Święto"
-
-
-class WeatherColumn(Enum):
-    TEMPERATURE = "Temperatura"
-    WIND_SPEED = "Prędkość wiatru"
-    HUMIDITY = "Wilgotność względna"
-    RAINFALL = "Suma opadu"
-    PRESSURE = "Ciśnienie"
-    TIMESTAMP = "timestamp"
-    IS_HOLIDAY = "Święto"
-
-
-class Metric(Enum):
-    MEAN = "Średnia"
-    MEDIAN = "Mediana"
-    STD_DEV = "Odchylenie standardowe"
-    Q1 = "25 centyl"
-    Q3 = "75 centyl"
-    COUNT = "Ilość"
-
-
-traffic_df = pd.read_csv("data/traffic/delays-merged.csv")
-traffic_df.rename(
-    columns={
-        "Brigade": TrafficColumn.BRIGADE.value,
-        "Vehicle No": TrafficColumn.VEHICLE_NO.value,
-        "Delay": TrafficColumn.DELAY.value,
-        "Outside": TrafficColumn.OUTSIDE.value,
-    },
-    inplace=True
-)
-
-weather_df = pd.read_csv(
-    "data/weather/weather-merged.csv",
-    dtype={
-        "temperatura": Types.DOUBLE.value,
-        "predkosc_wiatru": Types.DOUBLE.value,
-        "wilgotnosc_wzgledna": Types.DOUBLE.value,
-        "suma_opadu": Types.DOUBLE.value,
-        "cisnienie": Types.DOUBLE.value,
-        "timestamp": Types.STRING.value
-    },
-    usecols=lambda col: col not in ("id_stacji", "stacja", "kierunek_wiatru")
-)
-weather_df.rename(
-    columns={
-        "temperatura": WeatherColumn.TEMPERATURE.value,
-        "predkosc_wiatru": WeatherColumn.WIND_SPEED.value,
-        "wilgotnosc_wzgledna": WeatherColumn.HUMIDITY.value,
-        "suma_opadu": WeatherColumn.RAINFALL.value,
-        "cisnienie": WeatherColumn.PRESSURE.value,
-    },
-    inplace=True
-)
+traffic_df = load_traffic_data()
+weather_df = load_weather_data()
 
 traffic_df[TrafficColumn.TIMESTAMP.value] = pd.to_datetime(traffic_df[TrafficColumn.TIMESTAMP.value]).dt.floor("h")
 weather_df[WeatherColumn.TIMESTAMP.value] = pd.to_datetime(weather_df[WeatherColumn.TIMESTAMP.value])
@@ -83,28 +18,11 @@ merged_df = pd.merge(
     how="left",
     validate="1:m"
 )
-delay_stats_df = merged_df.groupby("timestamp")["Opóźnienie"].agg(
-    mean=np.mean,
-    median=np.median,
-    std_dev=np.std,
-    q1=lambda x: np.quantile(x, 0.25),
-    q3=lambda x: np.quantile(x, 0.75),
-    count="count"
-).reset_index()
-delay_stats_df.rename(
-    columns={
-        "mean": Metric.MEAN.value,
-        "median": Metric.MEDIAN.value,
-        "std_dev": Metric.STD_DEV.value,
-        "q1": Metric.Q1.value,
-        "q3": Metric.Q3.value,
-        "count": Metric.COUNT.value
-    },
-    inplace=True
-)
+delay_stats_df = calculate_delay_stats(traffic_df)
 correlation_df = pd.merge(
     weather_df, delay_stats_df,
-    on=WeatherColumn.TIMESTAMP.value,
+    left_on=WeatherColumn.TIMESTAMP.value,
+    right_on=TrafficColumn.TIMESTAMP.value,
     how="left",
     validate="1:m"
 )
@@ -169,18 +87,6 @@ avg_weather_params_fig = px.bar(
 )
 
 st.plotly_chart(avg_weather_params_fig)
-
-
-def calculate_traffic_metrics(group: pd.DataFrame) -> pd.Series:
-    return pd.Series({
-        Metric.MEAN.value: group[TrafficColumn.DELAY.value].mean(),
-        Metric.MEDIAN.value: group[TrafficColumn.DELAY.value].median(),
-        Metric.STD_DEV.value: group[TrafficColumn.DELAY.value].std(),
-        Metric.Q1.value: group[TrafficColumn.DELAY.value].quantile(0.25),
-        Metric.Q3.value: group[TrafficColumn.DELAY.value].quantile(0.75),
-        Metric.COUNT.value: group[TrafficColumn.DELAY.value].count(),
-    })
-
 
 traffic_groups = [
     TrafficColumn.VEHICLE_NO.value,
