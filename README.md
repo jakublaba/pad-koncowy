@@ -17,21 +17,26 @@ Standardowa procedura w każdym pythonowym projekcie
 
 ### Dashboardy
 
-Projekt zawiera 3 dashboardy:
-(todo poprawić nazwy plików bo obecnie są trochę z dupy)
+Projekt zawiera 4 dashboardy:
 
-- `dashboard.py` - analiza z podziałem na typ pojazdu (autobus/tramwaj/pociąg)
-- `holiday_analysis.py` - macierz korelacji, porównanie pogody i opóźnień z podziałem na różne kategorie
-- `predictions.py` - prognozy opóźnień - ogólna, oraz szczegółowe dla każdego pojazdu, każdej brygady oraz linii
+- `traffic_overview.py` - analiza opóźnień z podziałem na typ pojazdu - autobus, tramwaj, pociąg + mapy cieplne
+- `weather.py` - analiza pogody - macierz korelacji oraz porównanie pogody w różne typy dni
+- `traffic_categories.py` - analiza opóźnień z podziałem na kategorie - pojazdy, brygady, linie
+- `predictions.py` - predykcje średnich opóźnień oraz ilości opóźnień - ogólne oraz z podziałem na kategorie - pojazdy,
+  brygady, linie
 
-Uruchamiamy dashboard komendą:
+Uruchamiamy wybrany dashboard komendą:
 
 ```
-streamlit run <dashboard>
+python -m streamlit run dashboards/<dashboard>
 ```
 
 W przypadku problemów z automatycznym wybraniem portu, może być konieczne ręczne sprecyzowanie go flagą `--server.port`:
 
 ```
-streamlit run <dashboard> --server.port <port>
+python -m streamlit run dashboards/<dashboard> --server.port <port>
 ```
+
+### Juper Notebook
+
+W projekcie mamy też notebook `analiza.ipynb`, zawierający notatki i komentarze do danych i wykresów.
