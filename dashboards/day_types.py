@@ -114,6 +114,8 @@ delay_stats = {
         0.25).reset_index(),
     Metric.Q3.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[TrafficColumn.DELAY.value].quantile(
         0.75).reset_index(),
+    Metric.COUNT.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[
+        TrafficColumn.DELAY.value].count().reset_index(),
 }
 
 selected_delay_stat = st.selectbox(
