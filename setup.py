@@ -1,6 +1,6 @@
-from csv_download import download_all_csvs
-from merge_traffic import merge_traffic
-from merge_weather import merge_weather
+from util.csv_download import download_all_csvs
+from util.merge_traffic import merge_traffic
+from util.merge_weather import merge_weather
 
 CONTAINERS = "gtfs", "traffic", "weather"
 

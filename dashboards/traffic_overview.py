@@ -1,15 +1,15 @@
-import streamlit as st
+import folium
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import folium
+import streamlit as st
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 
 # Load the datasets
-delays = pd.read_csv('data/traffic/delays-merged.csv')
-weather = pd.read_csv('data/weather/weather-merged.csv')
-stops = pd.read_csv('data/gtfs/2025/01/03/stops.csv')
+delays = pd.read_csv('../data/traffic/delays-merged.csv')
+weather = pd.read_csv('../data/weather/weather-merged.csv')
+stops = pd.read_csv('../data/gtfs/2025/01/03/stops.csv')
 
 # Convert timestamp columns to datetime
 delays['timestamp'] = pd.to_datetime(delays['Timestamp'])
@@ -135,6 +135,7 @@ with tab1:
     # Display influence ratio using half-circle plots with color coding
     col1, col2, col3 = st.columns(3)
 
+
     def get_color(value):
         if value < 0:
             return "lightgreen"
@@ -142,6 +143,7 @@ with tab1:
             return "orange"
         else:
             return "red"
+
 
     for col, row in zip([col1, col2, col3], influence_ratio.itertuples()):
         with col:
@@ -185,7 +187,6 @@ with tab2:
     st.markdown('</div>', unsafe_allow_html=True)
 
     with col1:
-
         st.subheader('Średnie Opóźnienie w Ciągu Dnia (godziny)')
         mean_delay_by_hour = filtered_delays.groupby('hour')['Delay'].mean().reset_index()
         Q1 = mean_delay_by_hour['Delay'].quantile(0.25)

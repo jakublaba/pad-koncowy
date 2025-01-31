@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def merge_weather():
-    path = "data/weather/"
+    path = "../data/weather/"
 
     all_files = glob.glob(os.path.join(path, "**", "*.csv"), recursive=True)
 

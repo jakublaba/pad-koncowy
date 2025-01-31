@@ -3,14 +3,16 @@ import plotly.express as px
 import streamlit as st
 from holidays.countries import Poland
 
-from util import TrafficColumn, WeatherColumn, load_traffic_data, load_weather_data, Metric, calculate_delay_stats, \
-    calculate_traffic_metrics, DayType
+from util import load_traffic_data, load_weather_data, TrafficColumn, WeatherColumn, calculate_delay_stats, DayType, \
+    Metric
 
 traffic_df = load_traffic_data()
 weather_df = load_weather_data()
 
 traffic_df[TrafficColumn.TIMESTAMP.value] = pd.to_datetime(traffic_df[TrafficColumn.TIMESTAMP.value]).dt.floor("h")
 weather_df[WeatherColumn.TIMESTAMP.value] = pd.to_datetime(weather_df[WeatherColumn.TIMESTAMP.value])
+
+# ============================== CORRELATION MATRIX ==============================
 merged_df = pd.merge(
     weather_df, traffic_df,
     left_on=WeatherColumn.TIMESTAMP.value,
@@ -34,7 +36,9 @@ correlation_fig = px.imshow(
     title="Macierz korelacji"
 )
 st.plotly_chart(correlation_fig)
+# ================================================================================
 
+# ============================== DELAY STATS =====================================
 start_date = min(
     traffic_df[TrafficColumn.TIMESTAMP.value].min(),
     weather_df[WeatherColumn.TIMESTAMP.value].min()
@@ -97,30 +101,33 @@ avg_weather_params_fig = px.bar(
 )
 
 st.plotly_chart(avg_weather_params_fig)
+# ================================================================================
 
-traffic_groups = [
-    TrafficColumn.VEHICLE_NO.value,
-    TrafficColumn.BRIGADE.value,
-    TrafficColumn.OUTSIDE.value,
-    TrafficColumn.DAY_TYPE.value
-]
+# ============================== GLOBAL DELAY STATS ==============================
+delay_stats = {
+    Metric.MEAN.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[TrafficColumn.DELAY.value].mean().reset_index(),
+    Metric.MEDIAN.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[
+        TrafficColumn.DELAY.value].median().reset_index(),
+    Metric.STD_DEV.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[
+        TrafficColumn.DELAY.value].std().reset_index(),
+    Metric.Q1.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[TrafficColumn.DELAY.value].quantile(
+        0.25).reset_index(),
+    Metric.Q3.value: traffic_df.groupby(TrafficColumn.DAY_TYPE.value)[TrafficColumn.DELAY.value].quantile(
+        0.75).reset_index(),
+}
 
-selected_traffic_group = st.selectbox("Kategoria", traffic_groups)
-selected_traffic_metric = st.selectbox("Metryka", [e.value for e in Metric])
-
-traffic_metrics_df = (traffic_df
-                      .groupby(selected_traffic_group)[[TrafficColumn.DELAY.value]]
-                      .apply(calculate_traffic_metrics)
-                      .reset_index())
-
-fig = px.bar(
-    traffic_metrics_df,
-    x=selected_traffic_group,
-    y=selected_traffic_metric,
-    title=f"{selected_traffic_metric.replace('_', ' ').title()} w kategorii: {selected_traffic_group}",
+selected_delay_stat = st.selectbox(
+    "Metryka",
+    [e.value for e in Metric]
 )
-fig.update_layout(
-    xaxis_type="category",
-    yaxis_title="Opóźnienie (min)"
+
+delay_stats_fig = px.bar(
+    delay_stats[selected_delay_stat],
+    x=TrafficColumn.DAY_TYPE.value,
+    y=TrafficColumn.DELAY.value,
+    title=f"{selected_delay_stat} opóźnień dla różnych typów dni",
+    labels={TrafficColumn.DAY_TYPE.value: "Typ dnia", TrafficColumn.DELAY.value: "Opóźnienie (minuty)"}
 )
-st.plotly_chart(fig)
+
+st.plotly_chart(delay_stats_fig)
+# ================================================================================

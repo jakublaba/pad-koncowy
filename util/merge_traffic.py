@@ -28,7 +28,7 @@ def _normalize_outside(outside) -> bool:
 
 def merge_traffic():
     paths = _file_paths(
-        "data/traffic",
+        "../data/traffic",
         datetime(2024, 12, 8, 0, 0),
         datetime(2025, 1, 2, 23)
     )

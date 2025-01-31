@@ -68,11 +68,8 @@ def load_traffic_data() -> pd.DataFrame:
     )
     traffic_df.rename(
         columns={
-            TrafficColumn.VEHICLE_NO_OG.value: TrafficColumn.VEHICLE_NO.value,
-            TrafficColumn.BRIGADE_OG.value: TrafficColumn.BRIGADE.value,
-            TrafficColumn.ROUTE_OG.value: TrafficColumn.ROUTE.value,
-            TrafficColumn.DELAY_OG.value: TrafficColumn.DELAY.value,
-            TrafficColumn.OUTSIDE_OG.value: TrafficColumn.OUTSIDE.value,
+            e.value: TrafficColumn[e.name.replace("_OG", "")].value
+            for e in TrafficColumn if "_OG" in e.name
         },
         inplace=True
     )
@@ -94,11 +91,8 @@ def load_weather_data() -> pd.DataFrame:
     )
     weather_df.rename(
         columns={
-            WeatherColumn.TEMPERATURE_OG.value: WeatherColumn.TEMPERATURE.value,
-            WeatherColumn.WIND_SPEED_OG.value: WeatherColumn.WIND_SPEED.value,
-            WeatherColumn.HUMIDITY_OG.value: WeatherColumn.HUMIDITY.value,
-            WeatherColumn.RAINFALL_OG.value: WeatherColumn.RAINFALL.value,
-            WeatherColumn.PRESSURE_OG.value: WeatherColumn.PRESSURE.value,
+            e.value: WeatherColumn[e.name.replace("_OG", "")].value
+            for e in WeatherColumn if "_OG" in e.name
         },
         inplace=True
     )
