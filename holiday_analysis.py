@@ -4,7 +4,7 @@ import streamlit as st
 from holidays.countries import Poland
 
 from util import TrafficColumn, WeatherColumn, load_traffic_data, load_weather_data, Metric, calculate_delay_stats, \
-    calculate_traffic_metrics
+    calculate_traffic_metrics, DayType
 
 traffic_df = load_traffic_data()
 weather_df = load_weather_data()
@@ -45,20 +45,30 @@ end_date = max(
 )
 
 pl_holidays = [
-    date for date in
+    pd.Timestamp(date) for date in
     Poland(years=range(start_date.year, end_date.year + 1))
-    if start_date <= pd.Timestamp(date) <= end_date
 ]
 
-traffic_df[TrafficColumn.IS_HOLIDAY.value] = traffic_df[TrafficColumn.TIMESTAMP.value].dt.date.isin(pl_holidays)
-weather_df[WeatherColumn.IS_HOLIDAY.value] = weather_df[WeatherColumn.TIMESTAMP.value].dt.date.isin(pl_holidays)
+
+def get_day_type(date):
+    date = pd.Timestamp(date)
+    if date in pl_holidays:
+        return DayType.HOLIDAY.value
+    elif date.weekday() >= 5:
+        return DayType.WEEKEND.value
+    else:
+        return DayType.WEEKDAY.value
+
+
+traffic_df[TrafficColumn.DAY_TYPE.value] = traffic_df[TrafficColumn.TIMESTAMP.value].dt.date.apply(get_day_type)
+weather_df[WeatherColumn.DAY_TYPE.value] = weather_df[WeatherColumn.TIMESTAMP.value].dt.date.apply(get_day_type)
 
 weather_holiday_analysis = {
-    Metric.MEAN.value: weather_df.groupby(WeatherColumn.IS_HOLIDAY.value).mean().reset_index(),
-    Metric.MEDIAN.value: weather_df.groupby(WeatherColumn.IS_HOLIDAY.value).median().reset_index(),
-    Metric.STD_DEV.value: weather_df.groupby(WeatherColumn.IS_HOLIDAY.value).std().reset_index(),
-    Metric.Q1.value: weather_df.groupby(WeatherColumn.IS_HOLIDAY.value).quantile(0.25).reset_index(),
-    Metric.Q3.value: weather_df.groupby(WeatherColumn.IS_HOLIDAY.value).quantile(0.75).reset_index(),
+    Metric.MEAN.value: weather_df.groupby(WeatherColumn.DAY_TYPE.value).mean().reset_index(),
+    Metric.MEDIAN.value: weather_df.groupby(WeatherColumn.DAY_TYPE.value).median().reset_index(),
+    Metric.STD_DEV.value: weather_df.groupby(WeatherColumn.DAY_TYPE.value).std().reset_index(),
+    Metric.Q1.value: weather_df.groupby(WeatherColumn.DAY_TYPE.value).quantile(0.25).reset_index(),
+    Metric.Q3.value: weather_df.groupby(WeatherColumn.DAY_TYPE.value).quantile(0.75).reset_index(),
 }
 
 selected_weather_metric = st.selectbox(
@@ -78,10 +88,10 @@ selected_weather_param = st.selectbox(
 
 avg_weather_params_fig = px.bar(
     weather_holiday_analysis[selected_weather_metric][[
-        WeatherColumn.IS_HOLIDAY.value,
+        WeatherColumn.DAY_TYPE.value,
         selected_weather_param
     ]],
-    x=WeatherColumn.IS_HOLIDAY.value,
+    x=WeatherColumn.DAY_TYPE.value,
     y=selected_weather_param,
     title=f"{selected_weather_metric} dla parametru: {selected_weather_param}",
 )
@@ -92,7 +102,7 @@ traffic_groups = [
     TrafficColumn.VEHICLE_NO.value,
     TrafficColumn.BRIGADE.value,
     TrafficColumn.OUTSIDE.value,
-    TrafficColumn.IS_HOLIDAY.value
+    TrafficColumn.DAY_TYPE.value
 ]
 
 selected_traffic_group = st.selectbox("Kategoria", traffic_groups)

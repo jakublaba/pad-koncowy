@@ -6,7 +6,6 @@ from sklearn.linear_model import LinearRegression
 
 from util import load_traffic_data, load_weather_data, WeatherColumn, TrafficColumn, Metric, calculate_delay_stats
 
-# Load and preprocess data
 traffic_df = load_traffic_data()
 traffic_df[TrafficColumn.TIMESTAMP.value] = pd.to_datetime(traffic_df[TrafficColumn.TIMESTAMP.value]).dt.floor("h")
 weather_df = load_weather_data()
@@ -20,7 +19,6 @@ merged_df = pd.merge(
     validate="1:m"
 )
 
-# Global predictions
 st.header("Ogólna prognoza")
 global_metric = st.selectbox(
     "Metryka",
@@ -89,7 +87,11 @@ st.plotly_chart(global_fig)
 st.header("Szczegółowa prognoza")
 selected_category = st.selectbox(
     "Kategoria",
-    [TrafficColumn.VEHICLE_NO.value, TrafficColumn.BRIGADE.value],
+    [
+        TrafficColumn.VEHICLE_NO.value,
+        TrafficColumn.BRIGADE.value,
+        TrafficColumn.ROUTE.value,
+    ],
     key="specific_category",
 )
 selected_metric = st.selectbox(

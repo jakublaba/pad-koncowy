@@ -13,6 +13,8 @@ class Type(Enum):
 class TrafficColumn(Enum):
     BRIGADE_OG = "Brigade"
     BRIGADE = "Brygada"
+    ROUTE_OG = "Route"
+    ROUTE = "Linia"
     VEHICLE_NO_OG = "Vehicle No"
     VEHICLE_NO = "Numer pojazdu"
     DELAY_OG = "Delay"
@@ -20,7 +22,13 @@ class TrafficColumn(Enum):
     OUTSIDE_OG = "Outside"
     OUTSIDE = "Poza trasą"
     TIMESTAMP = "Timestamp"
-    IS_HOLIDAY = "Święto"
+    DAY_TYPE = "Typ dnia"
+
+
+class DayType(Enum):
+    WEEKDAY = "Dzień roboczy"
+    WEEKEND = "Weekend"
+    HOLIDAY = "Święto"
 
 
 class WeatherColumn(Enum):
@@ -35,7 +43,7 @@ class WeatherColumn(Enum):
     PRESSURE_OG = "cisnienie"
     PRESSURE = "Ciśnienie"
     TIMESTAMP = "timestamp"
-    IS_HOLIDAY = "Święto"
+    DAY_TYPE = "Typ dnia"
 
 
 class Metric(Enum):
@@ -62,6 +70,7 @@ def load_traffic_data() -> pd.DataFrame:
         columns={
             TrafficColumn.VEHICLE_NO_OG.value: TrafficColumn.VEHICLE_NO.value,
             TrafficColumn.BRIGADE_OG.value: TrafficColumn.BRIGADE.value,
+            TrafficColumn.ROUTE_OG.value: TrafficColumn.ROUTE.value,
             TrafficColumn.DELAY_OG.value: TrafficColumn.DELAY.value,
             TrafficColumn.OUTSIDE_OG.value: TrafficColumn.OUTSIDE.value,
         },
