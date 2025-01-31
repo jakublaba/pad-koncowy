@@ -11,3 +11,4 @@ holidays
 streamlit_folium
 numpy
 scikit-learn
+statsmodels

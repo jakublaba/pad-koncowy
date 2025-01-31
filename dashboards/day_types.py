@@ -36,9 +36,18 @@ correlation_fig = px.imshow(
     title="Macierz korelacji"
 )
 st.plotly_chart(correlation_fig)
+st.write(
+    """
+    Interesuje nas tutaj tak naprawdę tylko lewa dolna ćwiartka - korelacja różnych czynników pogodowych z metrykami
+    opóźnień. Możemy zaobserwować bardzo niskie korelacje, w większości nie przekraczające 0.15, w dużej ilości przypadków
+    również ujemne. Najmocniejszą korelacją jest tutaj prędkość wiatru i ilość opóźnień, ale nadal nie jest ona szczególnie
+    silna, bo zaledwie 0.25.
+    Wbrew oczekiwaniom, okazuje się że pogoda nie miała szczególnego wpływu na opóźnienia transportu publicznego.
+    """
+)
 # ================================================================================
 
-# ============================== DELAY STATS =====================================
+# ============================== WEATHER STATS =====================================
 start_date = min(
     traffic_df[TrafficColumn.TIMESTAMP.value].min(),
     weather_df[WeatherColumn.TIMESTAMP.value].min()
@@ -101,6 +110,18 @@ avg_weather_params_fig = px.bar(
 )
 
 st.plotly_chart(avg_weather_params_fig)
+st.write(
+    """
+    - **Temperatura** - nieznaczne różnice - średnia i mediana pomiędzy dniami roboczymi, weekendami i świętami różnią się
+    zaledwie o 1 lub 0.5 stopnia
+    - **Prędkość wiatru** - różnice znów są niezbyt znaczące, około 1km/h
+    - **Wilgotność względna** - niewielkie różnice, w święta około 15pp mniej wilgotno
+    - **Suma opadów** - pierwszy czynnik pogodowy, w którym widać wyraźną różnicę - w porównaniu do dni roboczych,
+    w weekendy i święta praktycznie nie padało. Weekendy i święta mają bardzo niskie odchylenie standardowe w tej kategorii,
+    więc widać że średnia suma opadów nie jest zaniżona przez mocno odstające próbki.
+    - **Ciśnienie** - nie widać istotnej różnicy, wszystkie metryki na podobnym poziomie.
+    """
+)
 # ================================================================================
 
 # ============================== GLOBAL DELAY STATS ==============================
@@ -132,4 +153,28 @@ delay_stats_fig = px.bar(
 )
 
 st.plotly_chart(delay_stats_fig)
+st.write(
+    """
+    Dni robocze odstają zarówno wysoką średnią jak i medianą, podczas kiedy odchylenia standardowe są na podobnym poziomie.
+    Można więc stwierdzić że w dni robocze opóźnienia zazwyczaj są dłuższe.
+    Warto wziąć tutaj pod uwagę, że spieszenie się pojazdów jest oznaczone przez ujemne opóźnienie - to może oznaczać również że
+    w weekendy oraz święta pojazdy bardziej się spieszą - jest to zgodne z intuicją, w te dni zazwyczaj na drogach jest mniejszy ruch.
+    Przy ilości opóźnień nie do końca dobrze skonstruowaliśmy wykres - widać na nim sumaryczną ilość ze wszystkich dni w danej kategorii,
+    więc logiczne że w dni robocze będzie ich najwięcej.
+    Powinniśmy rozważyć średnią ilość opóźnień dziennie, w rozpatrywanym okresie wystąpiło:
+    - 15 dni roboczych
+    - 8 dni weekendowych
+    - 3 dni świąteczne
+    
+    Średnia ilość opóźnień w:
+    - dni robocze: $205.323.000 \div 15 = 13.688.200$
+    - weekendy: $84.768.000 \div 8 = 10.596.000$
+    - święta: $28.918.000 \div 3 = 9.639.333,(3)$
+    
+    Nadal z danych wynika, że transport najczęściej spóźnia się w dni powszednie a najrzadziej w święta, jednak nie jest to już
+    tak kolosalna różnica.
+    Warto tutaj wspomnieć, że na wykresie z dashboardu traffic_overview widać wzrost opóźnień tuż przed okresem świątecznym, a następnie
+    spadek w same święta - jest to zgodne z intuicją, dużo osób wyjeżdża na święta do rodziny w tym okresie, co powoduje wzmożony ruch.
+    """
+)
 # ================================================================================

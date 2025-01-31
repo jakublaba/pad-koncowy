@@ -1,6 +1,5 @@
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 from sklearn.linear_model import LinearRegression
 
@@ -57,28 +56,19 @@ global_plot_df = pd.DataFrame({
     "Prognoza": global_predictions
 })
 
-global_trend_line = global_model.intercept_ + global_model.coef_[0] * X_global[WeatherColumn.TEMPERATURE.value].mean()
-
-global_fig = px.line(
+global_fig = px.scatter(
     global_plot_df,
     x="Timestamp",
     y=["Stan faktyczny", "Prognoza"],
-    labels={"value": "Opóźnienie"}
+    trendline="ols",
+    trendline_scope="overall",
+    labels={"value": "Opóźnienie"},
 )
+global_fig.update_traces(marker=dict(size=1), mode='lines+markers')
 global_fig.update_layout(
     xaxis_title="Czas",
     yaxis_title=f"{TrafficColumn.DELAY.value}: {global_metric}",
     legend_title="Legenda"
-)
-
-global_fig.add_trace(
-    go.Scatter(
-        x=global_plot_df["Timestamp"],
-        y=[global_trend_line] * len(global_plot_df),
-        mode="lines",
-        name="Trend",
-        line=dict(color="red")
-    )
 )
 
 st.plotly_chart(global_fig)
@@ -141,28 +131,25 @@ plot_df = pd.DataFrame({
     "Prognoza": predictions
 })
 
-trend_line = model.intercept_ + model.coef_[0] * X[WeatherColumn.TEMPERATURE.value].mean()
-
-fig = px.line(
+fig = px.scatter(
     plot_df,
     x="Timestamp",
     y=["Stan faktyczny", "Prognoza"],
+    trendline="ols",
+    trendline_scope="overall",
     title=f"Prognoza opóźnień dla: {selected_category} {selected_value}",
 )
+fig.update_traces(marker=dict(size=1), mode='lines+markers')
 fig.update_layout(
     xaxis_title="Czas",
     yaxis_title=f"{TrafficColumn.DELAY.value}: {selected_metric}",
     legend_title="Legenda"
 )
 
-fig.add_trace(
-    go.Scatter(
-        x=plot_df["Timestamp"],
-        y=[trend_line] * len(plot_df),
-        mode="lines",
-        name="Trend",
-        line=dict(color="red")
-    )
-)
-
 st.plotly_chart(fig)
+st.write(
+    """
+    Regresja liniowa nie pozwoliła zbyt dobrze przewidywać opóźnień.
+    Może mieć na to wpływ bardzo duża wariancja danych, jak i również niska korelacja pogody z opóźnieniami.
+    """
+)
