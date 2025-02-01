@@ -1,5 +1,20 @@
 # Analiza danych warszawskiego transportu publicznego w grudniu 2024
 
+## Dane
+
+Dane były zbierane z:
+
+- [API IMGW](https://danepubliczne.imgw.pl/pl/apiinfo)
+- Wstępnie webscraping z [czynaczas.pl](czynaczas.pl), później po kontakcie z właścicielem serwisu udało się uzyskać
+  chwilowy
+  dostęp do API
+- [FEED GTFS ZA POŚREDNICTWEM mkuran.pl](https://mkuran.pl/)
+
+Za pomocą napisanych przez nas procesów etl dostępnych w
+repozytorium [jakublaba/mobility-etl](https://github.com/jakublaba/mobility-etl). \
+Proces był hostowany w następujących warunkach:
+![](data/server.jpg)
+
 ## Jak uruchomić projekt?
 
 ### Przygotowanie środowiska wirtualnego

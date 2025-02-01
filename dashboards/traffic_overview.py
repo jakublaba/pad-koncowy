@@ -7,9 +7,9 @@ from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 
 # Load the datasets
-delays = pd.read_csv('../data/traffic/delays-merged.csv')
-weather = pd.read_csv('../data/weather/weather-merged.csv')
-stops = pd.read_csv('../data/gtfs/2025/01/03/stops.csv')
+delays = pd.read_csv('data/traffic/delays-merged.csv')
+weather = pd.read_csv('data/weather/weather-merged.csv')
+stops = pd.read_csv('data/gtfs/2025/01/03/stops.csv')
 
 # Convert timestamp columns to datetime
 delays['timestamp'] = pd.to_datetime(delays['Timestamp'])
@@ -84,6 +84,7 @@ with tab1:
     fig = px.scatter(merged_data, x=weather_column, y='Delay',
                      labels={weather_column: weather_factor, 'Delay': 'Opóźnienie (minuty)'},
                      title=f'Opóźnienie vs. {weather_factor}')
+    fig.update_traces(marker=dict(size=3), selector=dict(mode='markers'))
     st.plotly_chart(fig)
 
     st.markdown('<div class="metric-container">', unsafe_allow_html=True)
