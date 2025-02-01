@@ -64,7 +64,7 @@ global_fig = px.scatter(
     trendline_scope="overall",
     labels={"value": "Opóźnienie"},
 )
-global_fig.update_traces(marker=dict(size=1), mode='lines+markers')
+global_fig.update_traces(marker=dict(size=3))
 global_fig.update_layout(
     xaxis_title="Czas",
     yaxis_title=f"{TrafficColumn.DELAY.value}: {global_metric}",
@@ -139,7 +139,7 @@ fig = px.scatter(
     trendline_scope="overall",
     title=f"Prognoza opóźnień dla: {selected_category} {selected_value}",
 )
-fig.update_traces(marker=dict(size=1), mode='lines+markers')
+# fig.update_traces(marker=dict(size=3))
 fig.update_layout(
     xaxis_title="Czas",
     yaxis_title=f"{TrafficColumn.DELAY.value}: {selected_metric}",
