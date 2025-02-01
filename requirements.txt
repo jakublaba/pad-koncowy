@@ -3,3 +3,12 @@ azure-core
 azure-storage-blob
 pandas
 nbstripout
+streamlit-folium
+streamlit
+folium
+plotly
+holidays
+streamlit_folium
+numpy
+scikit-learn
+statsmodels
